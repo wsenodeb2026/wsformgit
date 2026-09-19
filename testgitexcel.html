@@ -44,6 +44,7 @@
     <h2>Excel Upload</h2>
 
     <input type="file" id="excelFile" accept=".xlsx,.xls">
+<button onclick="uploadExcel()">Upload to MongoDB</button>
 
     <br><br>
 
@@ -206,7 +207,44 @@ function saveRecord(index) {
 
     displayExcelData();
 }
+async function uploadExcel() {
 
+    const file = document.getElementById("excelFile").files[0];
+
+    if (!file) {
+        alert("Please select an Excel file.");
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = async function(e) {
+
+        const base64 = e.target.result.split(",")[1];
+
+        const response = await fetch(
+            "https://wsform-back.onrender.com/upload-excel",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    file: base64
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        alert(result.message);
+
+    };
+
+    reader.readAsDataURL(file);
+
+}
+        
         
     </script>
 
