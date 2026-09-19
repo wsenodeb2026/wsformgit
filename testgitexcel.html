@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Upload</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 30px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #eee;
+        }
+
+        input {
+            padding: 8px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Excel Upload</h2>
+
+    <input type="file" id="excelFile" accept=".xlsx,.xls">
+
+    <br><br>
+
+    <input type="text" id="searchID" placeholder="Enter ID">
+    <button onclick="searchRecord()">Search</button>
+
+    <div id="searchResult"></div>
+
+    <table id="excelTable">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+
+    let excelData = [];
+
+    document.getElementById("excelFile").addEventListener("change", function(event) {
+
+        const file = event.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+
+            const data = new Uint8Array(e.target.result);
+
+            const workbook = XLSX.read(data, {
+                type: "array"
+            });
+
+            const sheetName = workbook.SheetNames[0];
+
+            const worksheet = workbook.Sheets[sheetName];
+
+            excelData = XLSX.utils.sheet_to_json(worksheet);
+
+            displayExcelData();
+
+        };
+
+        reader.readAsArrayBuffer(file);
+
+    });
+
+
+    function displayExcelData() {
+
+        const tableHead = document.querySelector("#excelTable thead");
+        const tableBody = document.querySelector("#excelTable tbody");
+
+        tableHead.innerHTML = "";
+        tableBody.innerHTML = "";
+
+        if (excelData.length === 0) {
+            return;
+        }
+
+        const headers = Object.keys(excelData[0]);
+
+        let headerRow = "<tr>";
+
+        headers.forEach(function(header) {
+            headerRow += "<th>" + header + "</th>";
+        });
+
+        headerRow += "</tr>";
+
+        tableHead.innerHTML = headerRow;
+
+
+        excelData.forEach(function(row) {
+
+            let tableRow = "<tr>";
+
+            headers.forEach(function(header) {
+
+                tableRow += "<td>" + (row[header] || "") + "</td>";
+
+            });
+
+            tableRow += "</tr>";
+
+            tableBody.innerHTML += tableRow;
+
+        });
+
+    }
+
+
+    function searchRecord() {
+
+        const id = document.getElementById("searchID").value.trim();
+
+        const result = excelData.find(function(row) {
+
+            return String(row.ID).trim() === id;
+
+        });
+
+        const resultDiv = document.getElementById("searchResult");
+
+        if (!result) {
+
+            resultDiv.innerHTML = "<p>Record not found.</p>";
+
+            return;
+
+        }
+
+        resultDiv.innerHTML = `
+            <h3>Record Found</h3>
+
+            <p><b>ID:</b> ${result.ID}</p>
+
+            <p><b>Name:</b> ${result.Name}</p>
+
+            <p><b>Mobile:</b> ${result.Mobile}</p>
+
+            <p><b>Email:</b> ${result.Email}</p>
+
+            <p><b>Remarks:</b> ${result.Remarks}</p>
+        `;
+
+    }
+
+    </script>
+
+</body>
+</html>
