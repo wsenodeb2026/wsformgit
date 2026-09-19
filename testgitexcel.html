@@ -289,6 +289,62 @@ async function searchRecord() {
 
 }
 
+    async function saveMongoRecord(id) {
+
+    const record = {
+
+        id: id,
+
+        name: document.getElementById("editName").value,
+
+        mobile: document.getElementById("editMobile").value,
+
+        email: document.getElementById("editEmail").value,
+
+        remarks: document.getElementById("editRemarks").value
+
+    };
+
+
+    try {
+
+        const response = await fetch(
+            "https://wsform-back.onrender.com/update-record",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(record)
+            }
+        );
+
+
+        const result = await response.json();
+
+
+        if (result.success) {
+
+            alert("MongoDB updated successfully.");
+
+        } else {
+
+            alert("Update failed.");
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Unable to connect to server.");
+
+    }
+
+}
+
 
 /* UPDATE MONGODB */
 
