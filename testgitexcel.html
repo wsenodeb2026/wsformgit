@@ -138,42 +138,56 @@
     }
 
 
-    function searchRecord() {
+   function searchRecord() {
 
-        const id = document.getElementById("searchID").value.trim();
+    const id = document.getElementById("searchID").value.trim();
 
-        const result = excelData.find(function(row) {
+    const index = excelData.findIndex(function(row) {
+        return String(row.ID).trim() === id;
+    });
 
-            return String(row.ID).trim() === id;
+    const resultDiv = document.getElementById("searchResult");
 
-        });
+    if (index === -1) {
 
-        const resultDiv = document.getElementById("searchResult");
+        resultDiv.innerHTML = "<p>Record not found.</p>";
 
-        if (!result) {
-
-            resultDiv.innerHTML = "<p>Record not found.</p>";
-
-            return;
-
-        }
-
-        resultDiv.innerHTML = `
-            <h3>Record Found</h3>
-
-            <p><b>ID:</b> ${result.ID}</p>
-
-            <p><b>Name:</b> ${result.Name}</p>
-
-            <p><b>Mobile:</b> ${result.Mobile}</p>
-
-            <p><b>Email:</b> ${result.Email}</p>
-
-            <p><b>Remarks:</b> ${result.Remarks}</p>
-        `;
-
+        return;
     }
 
+    const result = excelData[index];
+
+    resultDiv.innerHTML = `
+
+        <h3>Record Found</h3>
+
+        <p><b>ID:</b> ${result.ID}</p>
+
+        <p>
+            <b>Name:</b><br>
+            <input type="text" id="editName" value="${result.Name || ""}">
+        </p>
+
+        <p>
+            <b>Mobile:</b><br>
+            <input type="text" id="editMobile" value="${result.Mobile || ""}">
+        </p>
+
+        <p>
+            <b>Email:</b><br>
+            <input type="email" id="editEmail" value="${result.Email || ""}">
+        </p>
+
+        <p>
+            <b>Remarks:</b><br>
+            <textarea id="editRemarks" rows="4" cols="40">${result.Remarks || ""}</textarea>
+        </p>
+
+        <button onclick="saveRecord(${index})">
+            Save Changes
+        </button>
+    `;
+}
     </script>
 
 </body>
