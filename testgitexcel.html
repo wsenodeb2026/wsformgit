@@ -207,42 +207,42 @@ function saveRecord(index) {
 
     displayExcelData();
 }
-async function uploadExcel() {
+        
+async function saveRecord(index) {
 
-    const file = document.getElementById("excelFile").files[0];
-
-    if (!file) {
-        alert("Please select an Excel file.");
-        return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = async function(e) {
-
-        const base64 = e.target.result.split(",")[1];
-
-        const response = await fetch(
-            "https://wsform-back.onrender.com/upload-excel",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    file: base64
-                })
-            }
-        );
-
-        const result = await response.json();
-
-        alert(result.message);
-
+    const record = {
+        id: excelData[index].ID,
+        name: document.getElementById("editName").value,
+        mobile: document.getElementById("editMobile").value,
+        email: document.getElementById("editEmail").value,
+        remarks: document.getElementById("editRemarks").value
     };
 
-    reader.readAsDataURL(file);
+    const response = await fetch(
+        "https://wsform-back.onrender.com/update-record",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(record)
+        }
+    );
 
+    const result = await response.json();
+
+    if (result.success) {
+        alert("MongoDB updated successfully");
+
+        excelData[index].Name = record.name;
+        excelData[index].Mobile = record.mobile;
+        excelData[index].Email = record.email;
+        excelData[index].Remarks = record.remarks;
+
+        displayExcelData();
+    } else {
+        alert("Update failed");
+    }
 }
         
         
