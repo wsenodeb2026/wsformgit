@@ -23,6 +23,46 @@
 
         <button type="submit">Submit</button>
     </form>
+    <script>
+document.querySelector("form").addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const formData = {
+        name: document.querySelector('[name="name"]').value,
+        mobile: document.querySelector('[name="mobile"]').value,
+        email: document.querySelector('[name="email"]').value,
+        remarks: document.querySelector('[name="remarks"]').value
+    };
+
+    try {
+
+        const response = await fetch("YOUR_RENDER_URL/submit", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert("Form submitted successfully!");
+            document.querySelector("form").reset();
+        } else {
+            alert("Error submitting form.");
+        }
+
+    } catch (error) {
+
+        console.error(error);
+        alert("Unable to connect to server.");
+
+    }
+
+});
+</script>
 
 </body>
 </html>
