@@ -188,6 +188,26 @@
         </button>
     `;
 }
+function saveRecord(index) {
+
+    excelData[index].Name =
+        document.getElementById("editName").value;
+
+    excelData[index].Mobile =
+        document.getElementById("editMobile").value;
+
+    excelData[index].Email =
+        document.getElementById("editEmail").value;
+
+    excelData[index].Remarks =
+        document.getElementById("editRemarks").value;
+
+    alert("Changes saved in the current Excel data.");
+
+    displayExcelData();
+}
+
+        
     </script>
 
 </body>
