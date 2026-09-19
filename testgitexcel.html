@@ -53,9 +53,20 @@
 
 <div id="searchResult"></div>
 
-<table id="excelTable">
-    <thead></thead>
-    <tbody></tbody>
+<table id="mongoTable" border="1" cellpadding="8" cellspacing="0">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th>Email</th>
+            <th>Remarks</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+
+    <tbody id="mongoData">
+    </tbody>
 </table>
 
 
@@ -413,6 +424,53 @@ async function saveRecord(index) {
     }
 
 }
+    async function loadMongoData() {
+
+    try {
+
+        const response = await fetch(
+            "https://wsform-back.onrender.com/data"
+        );
+
+        const data = await response.json();
+
+        const tableBody =
+            document.getElementById("mongoData");
+
+        tableBody.innerHTML = "";
+
+        data.forEach(function(item) {
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${item.id || ""}</td>
+                <td>${item.name || ""}</td>
+                <td>${item.mobile || ""}</td>
+                <td>${item.email || ""}</td>
+                <td>${item.remarks || ""}</td>
+                <td>
+                    ${item.createdAt
+                        ? new Date(item.createdAt).toLocaleString()
+                        : ""}
+                </td>
+            `;
+
+            tableBody.appendChild(row);
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Unable to load MongoDB data.");
+
+    }
+
+}
+
+loadMongoData();
 
 </script>
 
