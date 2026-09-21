@@ -1,159 +1,277 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Dynamic Excel Upload</title>
+
+    <meta charset="UTF-8">
+
+    <title>Excel Upload</title>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
     <style>
+
         body {
             font-family: Arial;
             margin: 30px;
         }
 
-        input, button {
-            padding: 10px;
-            margin: 5px;
+        input {
+            padding: 8px;
+            margin: 10px 0;
         }
 
         button {
+            padding: 10px 20px;
             cursor: pointer;
         }
 
         #status {
-            margin-top: 15px;
+            margin-top: 20px;
             font-weight: bold;
         }
+
     </style>
+
 </head>
 
 <body>
 
-<button onclick="location.href='index.html'">← Home</button>
-
 <h2>Upload Excel</h2>
 
-<input type="file" id="excelFile" accept=".xlsx,.xls">
+<button
+    onclick="location.href='index.html'">
+    ← Home
+</button>
+
+<br><br>
+
+<input
+    type="file"
+    id="excelFile"
+    accept=".xlsx,.xls">
 
 <br>
 
-<button type="button" id="uploadBtn">
+<button
+    type="button"
+    id="uploadButton">
+
     Upload to MongoDB
+
 </button>
 
-<p id="status"></p>
+<div id="status"></div>
+
 
 <script>
 
-document.getElementById("uploadBtn").addEventListener("click", uploadExcel);
+const API =
+    "https://enodeb26.onrender.com";
+
+
+const fileInput =
+    document.getElementById(
+        "excelFile"
+    );
+
+
+const uploadButton =
+    document.getElementById(
+        "uploadButton"
+    );
+
+
+const status =
+    document.getElementById(
+        "status"
+    );
+
+
+uploadButton.onclick =
+    uploadExcel;
+
 
 async function uploadExcel() {
 
-    const status = document.getElementById("status");
-    const fileInput = document.getElementById("excelFile");
+    if (
+        !fileInput.files ||
+        fileInput.files.length === 0
+    ) {
 
-    // First confirmation that button is working
-    status.innerText = "Button clicked...";
-
-    if (!fileInput.files || fileInput.files.length === 0) {
-
-        status.innerText = "Please select an Excel file first.";
-
-        alert("Please select an Excel file first.");
+        status.innerText =
+            "Please select an Excel file.";
 
         return;
+
     }
 
-    const file = fileInput.files[0];
-
-    status.innerText = "Reading Excel file...";
 
     try {
 
-        // Read Excel file
-        const arrayBuffer = await file.arrayBuffer();
+        status.innerText =
+            "Reading Excel...";
 
-        const workbook = XLSX.read(arrayBuffer, {
-            type: "array"
-        });
 
-        const sheetName = workbook.SheetNames[0];
+        const file =
+            fileInput.files[0];
 
-        const worksheet = workbook.Sheets[sheetName];
 
-        const jsonData = XLSX.utils.sheet_to_json(
-            worksheet,
-            {
-                defval: ""
-            }
-        );
+        const buffer =
+            await file.arrayBuffer();
 
-        if (!jsonData || jsonData.length === 0) {
+
+        const workbook =
+            XLSX.read(
+                buffer,
+                {
+                    type: "array"
+                }
+            );
+
+
+        const sheetName =
+            workbook.SheetNames[0];
+
+
+        const worksheet =
+            workbook.Sheets[
+                sheetName
+            ];
+
+
+        const data =
+            XLSX.utils.sheet_to_json(
+                worksheet,
+                {
+                    defval: ""
+                }
+            );
+
+
+        if (
+            data.length === 0
+        ) {
 
             status.innerText =
-                "Excel file contains no data.";
+                "Excel contains no data.";
 
             return;
+
         }
 
+
+        const columns =
+            Object.keys(
+                data[0]
+            );
+
+
         status.innerText =
-            "Excel read successfully. Uploading " +
-            jsonData.length +
+            "Uploading " +
+            data.length +
             " records...";
 
-        // Send data to Render
-        const response = await fetch(
-            "https://enodeb26.onrender.com/upload-excel",
-            {
-                method: "POST",
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+        const response =
+            await fetch(
+                API +
+                "/upload-excel",
+                {
 
-                body: JSON.stringify({
-                    data: jsonData
-                })
-            }
-        );
+                    method:
+                        "POST",
 
-        const result = await response.json();
+                    headers: {
 
-        if (!response.ok) {
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            data:
+                                data
+
+                        })
+
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
-                result.message || "Upload failed"
+                result.message ||
+                "Upload failed"
             );
+
         }
 
+
+        console.log(
+            "Batch ID:",
+            result.batchId
+        );
+
+
+        console.log(
+            "Columns:",
+            result.columns
+        );
+
+
         status.innerText =
-            "SUCCESS: " +
+            "SUCCESS! " +
             result.insertedCount +
             " records uploaded.";
 
+
         alert(
             "Excel uploaded successfully.\n\n" +
+
+            "Records: " +
             result.insertedCount +
-            " records inserted into MongoDB."
+
+            "\n\nColumns:\n" +
+            columns.join(", ")
         );
 
-    } catch (error) {
 
-        console.error("UPLOAD ERROR:", error);
+        // Open latest report
+        window.location.href =
+            "excel1.html";
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            error
+        );
+
 
         status.innerText =
-            "Upload failed: " + error.message;
+            "Upload failed: " +
+            error.message;
 
-        alert(
-            "Upload failed.\n\n" +
-            error.message
-        );
     }
+
 }
 
 </script>
 
 </body>
+
 </html>
 
