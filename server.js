@@ -42,13 +42,10 @@ const collection =
 // ========================================
 
 app.get("/", (req, res) => {
-
-    res.send(
-        "Dynamic Excel Backend is running"
+    res.sendFile(
+        __dirname + "/index1.html"
     );
-
 });
-
 
 // ========================================
 // UPLOAD EXCEL
