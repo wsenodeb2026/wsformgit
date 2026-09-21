@@ -101,18 +101,21 @@ async function loadData() {
             "status"
         );
 
-
     status.innerText =
         "Loading latest Excel data...";
-
 
     try {
 
         const response =
             await fetch(
-                API + "/data"
+                API +
+                "/data?t=" +
+                Date.now(),
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
             );
-
 
         if (
             !response.ok
@@ -124,16 +127,28 @@ async function loadData() {
 
         }
 
-
         const result =
             await response.json();
 
+        console.log(
+            "Latest Batch:",
+            result.batchId
+        );
+
+        console.log(
+            "Columns:",
+            result.columns
+        );
+
+        console.log(
+            "Records:",
+            result.data
+        );
 
         displayData(
             result.columns,
             result.data
         );
-
 
         status.innerText =
             result.data.length +
@@ -146,7 +161,6 @@ async function loadData() {
         console.error(
             error
         );
-
 
         status.innerText =
             "Error: " +
