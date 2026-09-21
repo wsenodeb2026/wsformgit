@@ -170,101 +170,73 @@ app.post("/upload-excel", async (req, res) => {
 // ========================================
 // GET LATEST BATCH
 // ========================================
-
 app.get("/data", async (req, res) => {
-
     try {
 
-        // Find newest record
-        const latestRecord =
-            await collection
-                .find({})
-                .sort({
-                    _id: -1
-                })
-                .limit(1)
-                .toArray();
+        const data = await collection
+            .find({})
+            .sort({ _id: 1 })
+            .toArray();
 
-
-        if (
-            latestRecord.length === 0
-        ) {
-
+        if (data.length === 0) {
             return res.json({
+                batchId: null,
+                columns: [],
+                data: []
+            });
+        }
 
-                batchId:
-                    null,
+        // Automatically collect all column names
+        // from the MongoDB records
+        const columnSet = new Set();
 
-                columns:
-                    [],
+        data.forEach(record => {
 
-                data:
-                    []
+            Object.keys(record).forEach(key => {
+
+                if (
+                    key !== "_id" &&
+                    key !== "batchId" &&
+                    key !== "excelColumns"
+                ) {
+                    columnSet.add(key);
+                }
 
             });
 
-        }
-
-
-        const batchId =
-            latestRecord[0].batchId;
-
-
-        // Get all records belonging
-        // to latest upload
-        const data =
-            await collection
-                .find({
-                    batchId:
-                        batchId
-                })
-                .sort({
-                    _id: 1
-                })
-                .toArray();
-
-
-        const columns =
-            latestRecord[0]
-                .excelColumns || [];
-
-
-        res.json({
-
-            batchId:
-                batchId,
-
-            columns:
-                columns,
-
-            data:
-                data
-
         });
 
-    }
+        const columns = Array.from(columnSet);
 
-    catch (error) {
+        res.json({
+            batchId: null,
+            columns: columns,
+            data: data
+        });
+
+    } catch (error) {
 
         console.error(
             "Fetch error:",
             error
         );
 
-
         res.status(500).json({
-
             message:
                 "Error fetching data",
-
             error:
                 error.message
-
         });
 
     }
-
 });
+
+
+       
+
+
+      
+
 
 
 // ========================================
