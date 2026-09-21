@@ -33,7 +33,7 @@ const db =
     mongoose.connection.useDb("wsform");
 
 const collection =
-    db.collection("wsdata_dynamic");
+    db.collection("enodebdata");
 
 
 // ========================================
