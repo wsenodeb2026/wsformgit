@@ -1,31 +1,591 @@
+
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Dynamic Report</title>
+
+    <meta charset="UTF-8">
+
+    <title>Dynamic Excel Report</title>
+
     <style>
-        body{font-family:Arial;margin:30px}
-        table{border-collapse:collapse;width:100%}
-        th,td{border:1px solid #999;padding:8px}
-        th{background:#eee}
-        input,button{padding:8px;margin:5px}
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 7px 12px;
+            margin: 3px;
+            cursor: pointer;
+        }
+
+        input {
+            padding: 7px;
+            width: 95%;
+            box-sizing: border-box;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #eeeeee;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .editButton {
+            background: #eeeeee;
+        }
+
     </style>
+
 </head>
+
 <body>
 
-<button onclick="location.href='index.html'">← Home</button>
 
 <h2>MongoDB Dynamic Report</h2>
 
-<input type="text" placeholder="Search ID">
 
-<button>Search</button>
+<button onclick="location.href='index.html'">
+    ← Home
+</button>
 
-<br><br>
+
+<button onclick="loadData()">
+    Refresh Data
+</button>
+
+
+<div id="status">
+    Loading data...
+</div>
+
 
 <table>
+
     <thead id="tableHead"></thead>
+
     <tbody id="tableBody"></tbody>
+
 </table>
 
+
+<script>
+
+
+const API =
+    "https://enodeb26.onrender.com";
+
+
+let allData = [];
+
+
+// =================================
+// LOAD DATA
+// =================================
+
+async function loadData() {
+
+    const status =
+        document.getElementById("status");
+
+
+    status.innerText =
+        "Loading data from MongoDB...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                API + "/data"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load data"
+            );
+
+        }
+
+
+        allData =
+            await response.json();
+
+
+        displayData();
+
+
+        status.innerText =
+            allData.length +
+            " records loaded.";
+
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+
+        status.innerText =
+            "Error loading data: " +
+            error.message;
+
+    }
+
+}
+
+
+// =================================
+// DISPLAY DATA
+// =================================
+
+function displayData() {
+
+    const head =
+        document.getElementById(
+            "tableHead"
+        );
+
+
+    const body =
+        document.getElementById(
+            "tableBody"
+        );
+
+
+    head.innerHTML = "";
+
+    body.innerHTML = "";
+
+
+    if (
+        !allData ||
+        allData.length === 0
+    ) {
+
+        body.innerHTML =
+            "<tr><td>No data found</td></tr>";
+
+        return;
+
+    }
+
+
+    // --------------------------------
+    // Find all column names dynamically
+    // --------------------------------
+
+    const columns = new Set();
+
+
+    allData.forEach(record => {
+
+        Object.keys(record).forEach(key => {
+
+            if (key !== "_id") {
+
+                columns.add(key);
+
+            }
+
+        });
+
+    });
+
+
+    const columnArray =
+        Array.from(columns);
+
+
+    // --------------------------------
+    // Header
+    // --------------------------------
+
+    let headerRow =
+        "<tr>";
+
+    headerRow +=
+        "<th>ID</th>";
+
+
+    columnArray.forEach(column => {
+
+        headerRow +=
+            "<th>" +
+            escapeHtml(column) +
+            "</th>";
+
+    });
+
+
+    headerRow +=
+        "<th>Action</th>";
+
+
+    headerRow +=
+        "</tr>";
+
+
+    head.innerHTML =
+        headerRow;
+
+
+    // --------------------------------
+    // Data rows
+    // --------------------------------
+
+    allData.forEach(record => {
+
+        const row =
+            document.createElement("tr");
+
+
+        // ID
+        const idCell =
+            document.createElement("td");
+
+        idCell.innerText =
+            record._id;
+
+        row.appendChild(idCell);
+
+
+        // Dynamic columns
+        columnArray.forEach(column => {
+
+            const cell =
+                document.createElement("td");
+
+
+            const input =
+                document.createElement(
+                    "input"
+                );
+
+
+            input.type =
+                "text";
+
+
+            input.value =
+                record[column] ?? "";
+
+
+            input.dataset.field =
+                column;
+
+
+            input.disabled =
+                true;
+
+
+            cell.appendChild(input);
+
+            row.appendChild(cell);
+
+        });
+
+
+        // Action
+        const actionCell =
+            document.createElement("td");
+
+
+        const editButton =
+            document.createElement(
+                "button"
+            );
+
+
+        editButton.innerText =
+            "Edit";
+
+
+        editButton.className =
+            "editButton";
+
+
+        editButton.onclick =
+            function () {
+
+                enableEdit(
+                    row,
+                    record._id
+                );
+
+            };
+
+
+        actionCell.appendChild(
+            editButton
+        );
+
+
+        row.appendChild(
+            actionCell
+        );
+
+
+        body.appendChild(row);
+
+    });
+
+}
+
+
+// =================================
+// ENABLE EDIT
+// =================================
+
+function enableEdit(
+    row,
+    id
+) {
+
+    const inputs =
+        row.querySelectorAll(
+            "input"
+        );
+
+
+    inputs.forEach(input => {
+
+        input.disabled =
+            false;
+
+    });
+
+
+    const actionCell =
+        row.lastElementChild;
+
+
+    actionCell.innerHTML = "";
+
+
+    const saveButton =
+        document.createElement(
+            "button"
+        );
+
+
+    saveButton.innerText =
+        "Save";
+
+
+    saveButton.onclick =
+        function () {
+
+            saveRecord(
+                row,
+                id
+            );
+
+        };
+
+
+    actionCell.appendChild(
+        saveButton
+    );
+
+
+    const cancelButton =
+        document.createElement(
+            "button"
+        );
+
+
+    cancelButton.innerText =
+        "Cancel";
+
+
+    cancelButton.onclick =
+        function () {
+
+            loadData();
+
+        };
+
+
+    actionCell.appendChild(
+        cancelButton
+    );
+
+}
+
+
+// =================================
+// SAVE RECORD
+// =================================
+
+async function saveRecord(
+    row,
+    id
+) {
+
+    const inputs =
+        row.querySelectorAll(
+            "input"
+        );
+
+
+    const updateData = {};
+
+
+    inputs.forEach(input => {
+
+        updateData[
+            input.dataset.field
+        ] =
+            input.value;
+
+    });
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                API +
+                "/data/" +
+                id,
+
+                {
+
+                    method:
+                        "PUT",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            updateData
+                        )
+
+                }
+
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                "Update failed"
+            );
+
+        }
+
+
+        alert(
+            "Record updated successfully."
+        );
+
+
+        loadData();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+
+        alert(
+            "Update failed:\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+// =================================
+// HTML SAFETY
+// =================================
+
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+// =================================
+// AUTOMATIC LOAD
+// =================================
+
+window.onload =
+    function () {
+
+        loadData();
+
+    };
+
+
+</script>
+
 </body>
+
 </html>
