@@ -1,68 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Online Form</title>
+    <title>Dynamic Excel System</title>
+    <style>
+        body{font-family:Arial;text-align:center;margin-top:80px}
+        a{
+            display:block;
+            width:250px;
+            margin:20px auto;
+            padding:12px;
+            background:#007bff;
+            color:white;
+            text-decoration:none;
+            border-radius:6px;
+        }
+    </style>
 </head>
-
 <body>
 
-    <h2>Online Form</h2>
+<h1>Dynamic Excel System</h1>
 
-    <form>
-        <label>Name:</label><br>
-        <input type="text" name="name"><br><br>
+<a href="form.html">Upload Excel</a>
 
-        <label>Mobile:</label><br>
-        <input type="text" name="mobile"><br><br>
-
-        <label>Email:</label><br>
-        <input type="email" name="email"><br><br>
-
-        <label>Remarks:</label><br>
-        <textarea name="remarks"></textarea><br><br>
-
-        <button type="submit">Submit</button>
-    </form>
-    <script>
-document.querySelector("form").addEventListener("submit", async function(event) {
-
-    event.preventDefault();
-
-    const formData = {
-        name: document.querySelector('[name="name"]').value,
-        mobile: document.querySelector('[name="mobile"]').value,
-        email: document.querySelector('[name="email"]').value,
-        remarks: document.querySelector('[name="remarks"]').value
-    };
-
-    try {
-
-        const response = await fetch("https://wsform-back.onrender.com/submit",{
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(formData)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert("Form submitted successfully!");
-            document.querySelector("form").reset();
-        } else {
-            alert("Error submitting form.");
-        }
-
-    } catch (error) {
-
-        console.error(error);
-        alert("Unable to connect to server.");
-
-    }
-
-});
-</script>
+<a href="excel.html">View Report</a>
 
 </body>
 </html>
