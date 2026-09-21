@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 
@@ -11,24 +10,14 @@
     <style>
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial;
             margin: 20px;
         }
 
-        h2 {
-            margin-bottom: 20px;
-        }
-
         button {
-            padding: 7px 12px;
-            margin: 3px;
+            padding: 8px 14px;
+            margin: 4px;
             cursor: pointer;
-        }
-
-        input {
-            padding: 7px;
-            width: 95%;
-            box-sizing: border-box;
         }
 
         table {
@@ -48,13 +37,15 @@
             background: #eeeeee;
         }
 
+        input {
+            padding: 6px;
+            width: 95%;
+            box-sizing: border-box;
+        }
+
         #status {
             margin-top: 15px;
             font-weight: bold;
-        }
-
-        .editButton {
-            background: #eeeeee;
         }
 
     </style>
@@ -63,22 +54,27 @@
 
 <body>
 
-
 <h2>MongoDB Dynamic Report</h2>
 
 
-<button onclick="location.href='index.html'">
+<button
+    onclick="location.href='index.html'">
+
     ← Home
+
 </button>
 
 
-<button onclick="loadData()">
+<button
+    onclick="loadData()">
+
     Refresh Data
+
 </button>
 
 
 <div id="status">
-    Loading data...
+    Loading...
 </div>
 
 
@@ -93,26 +89,24 @@
 
 <script>
 
-
 const API =
     "https://enodeb26.onrender.com";
 
 
-let allData = [];
-
-
-// =================================
-// LOAD DATA
-// =================================
+// =====================================
+// LOAD LATEST EXCEL
+// =====================================
 
 async function loadData() {
 
     const status =
-        document.getElementById("status");
+        document.getElementById(
+            "status"
+        );
 
 
     status.innerText =
-        "Loading data from MongoDB...";
+        "Loading latest Excel data...";
 
 
     try {
@@ -123,7 +117,9 @@ async function loadData() {
             );
 
 
-        if (!response.ok) {
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
                 "Unable to load data"
@@ -132,27 +128,31 @@ async function loadData() {
         }
 
 
-        allData =
+        const result =
             await response.json();
 
 
-        displayData();
+        displayData(
+            result.columns,
+            result.data
+        );
 
 
         status.innerText =
-            allData.length +
+            result.data.length +
             " records loaded.";
-
 
     }
 
     catch (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
 
         status.innerText =
-            "Error loading data: " +
+            "Error: " +
             error.message;
 
     }
@@ -160,11 +160,14 @@ async function loadData() {
 }
 
 
-// =================================
+// =====================================
 // DISPLAY DATA
-// =================================
+// =====================================
 
-function displayData() {
+function displayData(
+    columns,
+    data
+) {
 
     const head =
         document.getElementById(
@@ -178,189 +181,193 @@ function displayData() {
         );
 
 
-    head.innerHTML = "";
+    head.innerHTML =
+        "";
 
-    body.innerHTML = "";
+
+    body.innerHTML =
+        "";
 
 
     if (
-        !allData ||
-        allData.length === 0
+        !data ||
+        data.length === 0
     ) {
 
         body.innerHTML =
-            "<tr><td>No data found</td></tr>";
+            "<tr>" +
+            "<td>No data found</td>" +
+            "</tr>";
 
         return;
 
     }
 
 
-    // --------------------------------
-    // Find all column names dynamically
-    // --------------------------------
+    // =================================
+    // HEADER
+    // =================================
 
-    const columns = new Set();
-
-
-    allData.forEach(record => {
-
-        Object.keys(record).forEach(key => {
-
-            if (key !== "_id") {
-
-                columns.add(key);
-
-            }
-
-        });
-
-    });
-
-
-    const columnArray =
-        Array.from(columns);
-
-
-    // --------------------------------
-    // Header
-    // --------------------------------
-
-    let headerRow =
+    let header =
         "<tr>";
 
-    headerRow +=
+
+    header +=
         "<th>ID</th>";
 
 
-    columnArray.forEach(column => {
+    columns.forEach(
+        column => {
 
-        headerRow +=
-            "<th>" +
-            escapeHtml(column) +
-            "</th>";
+            header +=
+                "<th>" +
+                escapeHtml(
+                    column
+                ) +
+                "</th>";
 
-    });
+        }
+    );
 
 
-    headerRow +=
+    header +=
         "<th>Action</th>";
 
 
-    headerRow +=
+    header +=
         "</tr>";
 
 
     head.innerHTML =
-        headerRow;
+        header;
 
 
-    // --------------------------------
-    // Data rows
-    // --------------------------------
+    // =================================
+    // DATA
+    // =================================
 
-    allData.forEach(record => {
+    data.forEach(
+        record => {
 
-        const row =
-            document.createElement("tr");
-
-
-        // ID
-        const idCell =
-            document.createElement("td");
-
-        idCell.innerText =
-            record._id;
-
-        row.appendChild(idCell);
-
-
-        // Dynamic columns
-        columnArray.forEach(column => {
-
-            const cell =
-                document.createElement("td");
-
-
-            const input =
+            const row =
                 document.createElement(
-                    "input"
+                    "tr"
                 );
 
 
-            input.type =
-                "text";
+            // ID
+            const idCell =
+                document.createElement(
+                    "td"
+                );
 
 
-            input.value =
-                record[column] ?? "";
+            idCell.innerText =
+                record._id;
 
 
-            input.dataset.field =
-                column;
-
-
-            input.disabled =
-                true;
-
-
-            cell.appendChild(input);
-
-            row.appendChild(cell);
-
-        });
-
-
-        // Action
-        const actionCell =
-            document.createElement("td");
-
-
-        const editButton =
-            document.createElement(
-                "button"
+            row.appendChild(
+                idCell
             );
 
 
-        editButton.innerText =
-            "Edit";
+            // Excel columns
+            columns.forEach(
+                column => {
+
+                    const cell =
+                        document.createElement(
+                            "td"
+                        );
 
 
-        editButton.className =
-            "editButton";
+                    const input =
+                        document.createElement(
+                            "input"
+                        );
 
 
-        editButton.onclick =
-            function () {
+                    input.type =
+                        "text";
 
-                enableEdit(
-                    row,
-                    record._id
+
+                    input.value =
+                        record[column] ??
+                        "";
+
+
+                    input.dataset.field =
+                        column;
+
+
+                    input.disabled =
+                        true;
+
+
+                    cell.appendChild(
+                        input
+                    );
+
+
+                    row.appendChild(
+                        cell
+                    );
+
+                }
+            );
+
+
+            // Action
+            const actionCell =
+                document.createElement(
+                    "td"
                 );
 
-            };
+
+            const editButton =
+                document.createElement(
+                    "button"
+                );
 
 
-        actionCell.appendChild(
-            editButton
-        );
+            editButton.innerText =
+                "Edit";
 
 
-        row.appendChild(
-            actionCell
-        );
+            editButton.onclick =
+                function () {
+
+                    enableEdit(
+                        row,
+                        record._id
+                    );
+
+                };
 
 
-        body.appendChild(row);
+            actionCell.appendChild(
+                editButton
+            );
 
-    });
+
+            row.appendChild(
+                actionCell
+            );
+
+
+            body.appendChild(
+                row
+            );
+
+        }
+    );
 
 }
 
 
-// =================================
-// ENABLE EDIT
-// =================================
+// =====================================
+// EDIT
+// =====================================
 
 function enableEdit(
     row,
@@ -373,19 +380,22 @@ function enableEdit(
         );
 
 
-    inputs.forEach(input => {
+    inputs.forEach(
+        input => {
 
-        input.disabled =
-            false;
+            input.disabled =
+                false;
 
-    });
+        }
+    );
 
 
     const actionCell =
         row.lastElementChild;
 
 
-    actionCell.innerHTML = "";
+    actionCell.innerHTML =
+        "";
 
 
     const saveButton =
@@ -439,9 +449,9 @@ function enableEdit(
 }
 
 
-// =================================
-// SAVE RECORD
-// =================================
+// =====================================
+// SAVE
+// =====================================
 
 async function saveRecord(
     row,
@@ -454,17 +464,20 @@ async function saveRecord(
         );
 
 
-    const updateData = {};
+    const updateData =
+        {};
 
 
-    inputs.forEach(input => {
+    inputs.forEach(
+        input => {
 
-        updateData[
-            input.dataset.field
-        ] =
-            input.value;
+            updateData[
+                input.dataset.field
+            ] =
+                input.value;
 
-    });
+        }
+    );
 
 
     try {
@@ -502,7 +515,9 @@ async function saveRecord(
             await response.json();
 
 
-        if (!response.ok) {
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
                 result.message ||
@@ -523,11 +538,13 @@ async function saveRecord(
 
     catch (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
 
         alert(
-            "Update failed:\n" +
+            "Update failed: " +
             error.message
         );
 
@@ -536,11 +553,13 @@ async function saveRecord(
 }
 
 
-// =================================
+// =====================================
 // HTML SAFETY
-// =================================
+// =====================================
 
-function escapeHtml(value) {
+function escapeHtml(
+    value
+) {
 
     return String(value)
 
@@ -572,9 +591,9 @@ function escapeHtml(value) {
 }
 
 
-// =================================
+// =====================================
 // AUTOMATIC LOAD
-// =================================
+// =====================================
 
 window.onload =
     function () {
@@ -582,7 +601,6 @@ window.onload =
         loadData();
 
     };
-
 
 </script>
 
