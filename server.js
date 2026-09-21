@@ -1,7 +1,7 @@
-```javascript
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
 const app = express();
 
@@ -9,32 +9,36 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
 
-// ===============================
-// MongoDB CONNECTION
-// ===============================
+// ========================================
+// MONGODB CONNECTION
+// ========================================
 
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log("MongoDB connected successfully");
     })
     .catch((error) => {
-        console.error("MongoDB connection error:", error);
+        console.error(
+            "MongoDB connection error:",
+            error
+        );
     });
 
 
-// ===============================
-// DATABASE AND COLLECTION
-// ===============================
+// ========================================
+// DATABASE / COLLECTION
+// ========================================
 
-const db = mongoose.connection.useDb("wsform");
+const db =
+    mongoose.connection.useDb("wsform");
 
 const collection =
     db.collection("wsdata_dynamic");
 
 
-// ===============================
+// ========================================
 // TEST
-// ===============================
+// ========================================
 
 app.get("/", (req, res) => {
 
@@ -45,15 +49,17 @@ app.get("/", (req, res) => {
 });
 
 
-// ===============================
-// UPLOAD EXCEL DATA
-// ===============================
+// ========================================
+// UPLOAD EXCEL
+// ========================================
 
 app.post("/upload-excel", async (req, res) => {
 
     try {
 
-        const data = req.body.data;
+        const data =
+            req.body.data;
+
 
         if (
             !Array.isArray(data) ||
@@ -61,15 +67,57 @@ app.post("/upload-excel", async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 message:
                     "No Excel data received"
+
             });
 
         }
 
 
+        // Create unique batch ID
+        const batchId =
+            crypto.randomUUID();
+
+
+        // Get column names from Excel
+        const columns =
+            Object.keys(data[0]);
+
+
+        // Add batch information
+        const records =
+            data.map(row => ({
+
+                ...row,
+
+                batchId:
+                    batchId,
+
+                excelColumns:
+                    columns
+
+            }));
+
+
+        // Insert records
         const result =
-            await collection.insertMany(data);
+            await collection.insertMany(
+                records
+            );
+
+
+        console.log(
+            "Batch:",
+            batchId
+        );
+
+
+        console.log(
+            "Columns:",
+            columns
+        );
 
 
         console.log(
@@ -82,6 +130,12 @@ app.post("/upload-excel", async (req, res) => {
 
             message:
                 "Excel uploaded successfully",
+
+            batchId:
+                batchId,
+
+            columns:
+                columns,
 
             insertedCount:
                 result.insertedCount
@@ -113,22 +167,80 @@ app.post("/upload-excel", async (req, res) => {
 });
 
 
-// ===============================
-// GET ALL DATA
-// ===============================
+// ========================================
+// GET LATEST BATCH
+// ========================================
 
 app.get("/data", async (req, res) => {
 
     try {
 
-        const data =
+        // Find newest record
+        const latestRecord =
             await collection
                 .find({})
-                .sort({ _id: -1 })
+                .sort({
+                    _id: -1
+                })
+                .limit(1)
                 .toArray();
 
 
-        res.json(data);
+        if (
+            latestRecord.length === 0
+        ) {
+
+            return res.json({
+
+                batchId:
+                    null,
+
+                columns:
+                    [],
+
+                data:
+                    []
+
+            });
+
+        }
+
+
+        const batchId =
+            latestRecord[0].batchId;
+
+
+        // Get all records belonging
+        // to latest upload
+        const data =
+            await collection
+                .find({
+                    batchId:
+                        batchId
+                })
+                .sort({
+                    _id: 1
+                })
+                .toArray();
+
+
+        const columns =
+            latestRecord[0]
+                .excelColumns || [];
+
+
+        res.json({
+
+            batchId:
+                batchId,
+
+            columns:
+                columns,
+
+            data:
+                data
+
+        });
 
     }
 
@@ -155,103 +267,114 @@ app.get("/data", async (req, res) => {
 });
 
 
-// ===============================
-// UPDATE ONE RECORD
-// ===============================
+// ========================================
+// UPDATE RECORD
+// ========================================
 
-app.put("/data/:id", async (req, res) => {
+app.put(
+    "/data/:id",
+    async (req, res) => {
 
-    try {
+        try {
 
-        const id =
-            req.params.id;
-
-
-        const updateData =
-            req.body;
+            const id =
+                req.params.id;
 
 
-        // Remove _id so MongoDB
-        // does not try to modify it
-
-        delete updateData._id;
+            const updateData =
+                req.body;
 
 
-        const result =
-            await collection.updateOne(
-
-                {
-                    _id:
-                        new mongoose.Types.ObjectId(id)
-                },
-
-                {
-                    $set:
-                        updateData
-                }
-
-            );
+            // Never allow _id to be changed
+            delete updateData._id;
 
 
-        if (
-            result.matchedCount === 0
-        ) {
+            // Never allow batch information
+            // to be changed during editing
+            delete updateData.batchId;
 
-            return res.status(404).json({
+            delete updateData.excelColumns;
+
+
+            const result =
+                await collection.updateOne(
+
+                    {
+                        _id:
+                            new mongoose.Types
+                                .ObjectId(id)
+                    },
+
+                    {
+                        $set:
+                            updateData
+                    }
+
+                );
+
+
+            if (
+                result.matchedCount === 0
+            ) {
+
+                return res.status(404).json({
+
+                    message:
+                        "Record not found"
+
+                });
+
+            }
+
+
+            res.json({
 
                 message:
-                    "Record not found"
+                    "Record updated successfully"
 
             });
 
         }
 
+        catch (error) {
 
-        res.json({
-
-            message:
-                "Record updated successfully"
-
-        });
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Update error:",
-            error
-        );
+            console.error(
+                "Update error:",
+                error
+            );
 
 
-        res.status(500).json({
+            res.status(500).json({
 
-            message:
-                "Update failed",
+                message:
+                    "Update failed",
 
-            error:
-                error.message
+                error:
+                    error.message
 
-        });
+            });
+
+        }
 
     }
+);
 
-});
 
-
-// ===============================
+// ========================================
 // START SERVER
-// ===============================
+// ========================================
 
 const PORT =
     process.env.PORT || 3000;
 
 
-app.listen(PORT, () => {
+app.listen(
+    PORT,
+    () => {
 
-    console.log(
-        `Server running on port ${PORT}`
-    );
+        console.log(
+            `Server running on port ${PORT}`
+        );
 
-});
-```
+    }
+);
