@@ -1,12 +1,29 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Upload Excel</title>
+    <title>Dynamic Excel Upload</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
     <style>
-        body{font-family:Arial;margin:30px}
-        input,button{padding:8px;margin:5px}
+        body {
+            font-family: Arial;
+            margin: 30px;
+        }
+
+        input, button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+        }
     </style>
 </head>
+
 <body>
 
 <button onclick="location.href='index.html'">← Home</button>
@@ -15,9 +32,101 @@
 
 <input type="file" id="excelFile" accept=".xlsx,.xls">
 
-<button id="uploadBtn">Upload to MongoDB</button>
+<button onclick="uploadExcel()">Upload to MongoDB</button>
 
 <p id="status"></p>
 
+
+<script>
+
+async function uploadExcel() {
+
+    const fileInput = document.getElementById("excelFile");
+    const status = document.getElementById("status");
+
+    if (!fileInput.files.length) {
+        alert("Please select an Excel file first.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+
+    status.innerText = "Reading Excel file...";
+
+    try {
+
+        const data = await file.arrayBuffer();
+
+        const workbook = XLSX.read(data, {
+            type: "array"
+        });
+
+        const sheetName = workbook.SheetNames[0];
+
+        const worksheet = workbook.Sheets[sheetName];
+
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+            defval: ""
+        });
+
+        if (jsonData.length === 0) {
+            status.innerText = "Excel file contains no data.";
+            return;
+        }
+
+        status.innerText =
+            "Excel read successfully. Uploading " +
+            jsonData.length +
+            " records...";
+
+        const response = await fetch(
+            "https://enodeb26.onrender.com/upload-excel",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    data: jsonData
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Upload failed");
+        }
+
+        status.innerText =
+            "Success! " +
+            result.insertedCount +
+            " records uploaded to MongoDB.";
+
+        alert(
+            "Excel uploaded successfully.\n\n" +
+            result.insertedCount +
+            " records inserted."
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        status.innerText =
+            "Upload failed: " + error.message;
+
+        alert(
+            "Upload failed.\n\n" +
+            error.message
+        );
+    }
+}
+
+</script>
+
 </body>
 </html>
+```
