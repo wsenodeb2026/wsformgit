@@ -1,133 +1,375 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
 
-    <meta charset="UTF-8">
+```
+<meta charset="UTF-8">
 
-    <title>Dynamic Excel Report</title>
+<title>Dynamic Excel Report</title>
 
-    <style>
+<style>
 
-        body {
-            font-family: Arial;
-            margin: 20px;
-        }
+    body {
+        font-family: Arial;
+        margin: 20px;
+    }
 
-        button {
-            padding: 8px 14px;
-            margin: 4px;
-            cursor: pointer;
-        }
+    button {
+        padding: 8px 14px;
+        margin: 4px;
+        cursor: pointer;
+    }
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
+    select {
+        padding: 8px;
+        margin: 4px;
+        min-width: 450px;
+    }
 
-        th,
-        td {
-            border: 1px solid #999;
-            padding: 8px;
-            text-align: left;
-        }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+    }
 
-        th {
-            background: #eeeeee;
-        }
+    th,
+    td {
+        border: 1px solid #999;
+        padding: 8px;
+        text-align: left;
+    }
 
-        input {
-            padding: 6px;
-            width: 95%;
-            box-sizing: border-box;
-        }
+    th {
+        background: #eeeeee;
+    }
 
-        #status {
-            margin-top: 15px;
-            font-weight: bold;
-        }
+    input {
+        padding: 6px;
+        width: 95%;
+        box-sizing: border-box;
+    }
 
-    </style>
+    #status {
+        margin-top: 15px;
+        font-weight: bold;
+    }
+
+    #fileInfo {
+        margin-top: 10px;
+        font-weight: bold;
+    }
+
+</style>
+```
 
 </head>
 
 <body>
 
 <h2>MongoDB Dynamic Report</h2>
-<label><b>Select Excel:</b></label>
 
-<select id="batchSelect" onchange="loadSelectedBatch()">
-    <option value="">Loading...</option>
+<!-- EXCEL SELECTION -->
+
+<label>
+    <b>Select Excel:</b>
+</label>
+
+<select
+ id="batchSelect"
+ onchange="loadSelectedBatch()">
+
+```
+<option value="">
+    Loading...
+</option>
+```
+
 </select>
 
-<button onclick="loadBatches()">Refresh Excel List</button>
+<button
+ onclick="loadBatches()">
+
+```
+Refresh Excel List
+```
+
+</button>
 
 <div id="fileInfo"></div>
 
-<button
-    onclick="location.href='index1.html'">
+<br>
 
-    ← Home
+<!-- NAVIGATION -->
+
+<button
+ onclick="location.href='index1.html'">
+
+```
+← Home
+```
 
 </button>
 
-
 <button
-    onclick="loadData()">
+ onclick="loadSelectedBatch()">
 
-    Refresh Data
+```
+Refresh Data
+```
 
 </button>
-
 
 <div id="status">
     Loading...
 </div>
 
-
 <table>
 
-    <thead id="tableHead"></thead>
+```
+<thead id="tableHead"></thead>
 
-    <tbody id="tableBody"></tbody>
+<tbody id="tableBody"></tbody>
+```
 
 </table>
 
-
 <script>
+
 const API = "";
 
+
 // =====================================
-// LOAD LATEST EXCEL
+// LOAD EXCEL LIST
 // =====================================
 
-async function loadData() {
+async function loadBatches() {
+
+    const select =
+        document.getElementById(
+            "batchSelect"
+        );
+
+    try {
+
+        select.innerHTML =
+            "<option value=''>Loading...</option>";
+
+
+        const response =
+            await fetch(
+                API +
+                "/batches?t=" +
+                Date.now(),
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load Excel list"
+            );
+
+        }
+
+
+        const batches =
+            await response.json();
+
+
+        select.innerHTML =
+            "";
+
+
+        if (
+            !batches ||
+            batches.length === 0
+        ) {
+
+            select.innerHTML =
+                "<option value=''>" +
+                "No Excel files found" +
+                "</option>";
+
+            document.getElementById(
+                "status"
+            ).innerText =
+                "No Excel files found.";
+
+            return;
+
+        }
+
+
+        batches.forEach(
+            batch => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    batch._id;
+
+
+                option.textContent =
+                    batch.fileName +
+                    " | " +
+                    new Date(
+                        batch.uploadTime
+                    ).toLocaleString() +
+                    " | " +
+                    batch.recordCount +
+                    " records";
+
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        // Check if a batch was passed
+        // in the URL after upload
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const urlBatch =
+            params.get("batch");
+
+
+        if (
+            urlBatch &&
+            batches.some(
+                batch =>
+                    batch._id === urlBatch
+            )
+        ) {
+
+            select.value =
+                urlBatch;
+
+        }
+        else {
+
+            // Select latest Excel
+
+            select.value =
+                batches[0]._id;
+
+        }
+
+
+        loadSelectedBatch();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        select.innerHTML =
+            "<option value=''>" +
+            "Error loading Excel list" +
+            "</option>";
+
+
+        document.getElementById(
+            "status"
+        ).innerText =
+            "Error: " +
+            error.message;
+
+    }
+
+}
+
+
+// =====================================
+// LOAD SELECTED EXCEL
+// =====================================
+
+function loadSelectedBatch() {
+
+    const select =
+        document.getElementById(
+            "batchSelect"
+        );
+
+
+    const batchId =
+        select.value;
+
+
+    if (!batchId) {
+
+        return;
+
+    }
+
+
+    loadData(
+        batchId
+    );
+
+}
+
+
+// =====================================
+// LOAD SELECTED EXCEL DATA
+// =====================================
+
+async function loadData(
+    batchId
+) {
 
     const status =
         document.getElementById(
             "status"
         );
 
+
     status.innerText =
-        "Loading latest Excel data...";
+        "Loading Excel data...";
+
 
     try {
 
         const response =
             await fetch(
+
                 API +
-                "/data?t=" +
+                "/data?batch=" +
+                encodeURIComponent(
+                    batchId
+                ) +
+                "&t=" +
                 Date.now(),
+
                 {
                     method: "GET",
                     cache: "no-store"
                 }
+
             );
 
-        if (
-            !response.ok
-        ) {
+
+        if (!response.ok) {
 
             throw new Error(
                 "Unable to load data"
@@ -135,28 +377,63 @@ async function loadData() {
 
         }
 
+
         const result =
             await response.json();
 
+
         console.log(
-            "Latest Batch:",
+            "Batch:",
             result.batchId
         );
+
+
+        console.log(
+            "File:",
+            result.fileName
+        );
+
 
         console.log(
             "Columns:",
             result.columns
         );
 
+
         console.log(
             "Records:",
             result.data
         );
 
+
+        // FILE INFORMATION
+
+        const fileInfo =
+            document.getElementById(
+                "fileInfo"
+            );
+
+
+        fileInfo.innerText =
+            "File: " +
+            (result.fileName || "") +
+            " | Uploaded: " +
+            (
+                result.uploadTime
+                    ? new Date(
+                        result.uploadTime
+                    ).toLocaleString()
+                    : ""
+            );
+
+
+        // DISPLAY DATA
+
         displayData(
             result.columns,
             result.data
         );
+
 
         status.innerText =
             result.data.length +
@@ -169,6 +446,7 @@ async function loadData() {
         console.error(
             error
         );
+
 
         status.innerText =
             "Error: " +
@@ -243,386 +521,4 @@ function displayData(
                 escapeHtml(
                     column
                 ) +
-                "</th>";
-
-        }
-    );
-
-
-    header +=
-        "<th>Action</th>";
-
-
-    header +=
-        "</tr>";
-
-
-    head.innerHTML =
-        header;
-
-
-    // =================================
-    // DATA
-    // =================================
-
-    data.forEach(
-        record => {
-
-            const row =
-                document.createElement(
-                    "tr"
-                );
-
-
-            // ID
-            const idCell =
-                document.createElement(
-                    "td"
-                );
-
-
-            idCell.innerText =
-                record._id;
-
-
-            row.appendChild(
-                idCell
-            );
-
-
-            // Excel columns
-            columns.forEach(
-                column => {
-
-                    const cell =
-                        document.createElement(
-                            "td"
-                        );
-
-
-                    const input =
-                        document.createElement(
-                            "input"
-                        );
-
-
-                    input.type =
-                        "text";
-
-
-                    input.value =
-                        record[column] ??
-                        "";
-
-
-                    input.dataset.field =
-                        column;
-
-
-                    input.disabled =
-                        true;
-
-
-                    cell.appendChild(
-                        input
-                    );
-
-
-                    row.appendChild(
-                        cell
-                    );
-
-                }
-            );
-
-
-            // Action
-            const actionCell =
-                document.createElement(
-                    "td"
-                );
-
-
-            const editButton =
-                document.createElement(
-                    "button"
-                );
-
-
-            editButton.innerText =
-                "Edit";
-
-
-            editButton.onclick =
-                function () {
-
-                    enableEdit(
-                        row,
-                        record._id
-                    );
-
-                };
-
-
-            actionCell.appendChild(
-                editButton
-            );
-
-
-            row.appendChild(
-                actionCell
-            );
-
-
-            body.appendChild(
-                row
-            );
-
-        }
-    );
-
-}
-
-
-// =====================================
-// EDIT
-// =====================================
-
-function enableEdit(
-    row,
-    id
-) {
-
-    const inputs =
-        row.querySelectorAll(
-            "input"
-        );
-
-
-    inputs.forEach(
-        input => {
-
-            input.disabled =
-                false;
-
-        }
-    );
-
-
-    const actionCell =
-        row.lastElementChild;
-
-
-    actionCell.innerHTML =
-        "";
-
-
-    const saveButton =
-        document.createElement(
-            "button"
-        );
-
-
-    saveButton.innerText =
-        "Save";
-
-
-    saveButton.onclick =
-        function () {
-
-            saveRecord(
-                row,
-                id
-            );
-
-        };
-
-
-    actionCell.appendChild(
-        saveButton
-    );
-
-
-    const cancelButton =
-        document.createElement(
-            "button"
-        );
-
-
-    cancelButton.innerText =
-        "Cancel";
-
-
-    cancelButton.onclick =
-        function () {
-
-            loadData();
-
-        };
-
-
-    actionCell.appendChild(
-        cancelButton
-    );
-
-}
-
-
-// =====================================
-// SAVE
-// =====================================
-
-async function saveRecord(
-    row,
-    id
-) {
-
-    const inputs =
-        row.querySelectorAll(
-            "input"
-        );
-
-
-    const updateData =
-        {};
-
-
-    inputs.forEach(
-        input => {
-
-            updateData[
-                input.dataset.field
-            ] =
-                input.value;
-
-        }
-    );
-
-
-    try {
-
-        const response =
-            await fetch(
-
-                API +
-                "/data/" +
-                id,
-
-                {
-
-                    method:
-                        "PUT",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json"
-
-                    },
-
-                    body:
-                        JSON.stringify(
-                            updateData
-                        )
-
-                }
-
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if (
-            !response.ok
-        ) {
-
-            throw new Error(
-                result.message ||
-                "Update failed"
-            );
-
-        }
-
-
-        alert(
-            "Record updated successfully."
-        );
-
-
-        loadData();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            error
-        );
-
-
-        alert(
-            "Update failed: " +
-            error.message
-        );
-
-    }
-
-}
-
-
-// =====================================
-// HTML SAFETY
-// =====================================
-
-function escapeHtml(
-    value
-) {
-
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-// =====================================
-// AUTOMATIC LOAD
-// =====================================
-
-window.onload =
-    function () {
-
-        loadData();
-
-    };
-
-</script>
-
-</body>
-
-</html>
+                "</th
