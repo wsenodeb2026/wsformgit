@@ -8,7 +8,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
-
 app.use(express.static(__dirname));
 
 
@@ -18,24 +17,18 @@ app.use(express.static(__dirname));
 
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
-
-        console.log(
-            "MongoDB connected successfully"
-        );
-
+        console.log("MongoDB connected successfully");
     })
     .catch((error) => {
-
         console.error(
             "MongoDB connection error:",
             error
         );
-
     });
 
 
 // ========================================
-// DATABASE / COLLECTION
+// DATABASE
 // ========================================
 
 const db =
@@ -46,7 +39,7 @@ const collection =
 
 
 // ========================================
-// HOME PAGE
+// HOME
 // ========================================
 
 app.get("/", (req, res) => {
@@ -66,11 +59,7 @@ app.post("/upload-excel", async (req, res) => {
 
     try {
 
-        const data =
-            req.body.data;
-
-
-        // Check Excel data
+        const data = req.body.data;
 
         if (
             !Array.isArray(data) ||
@@ -78,72 +67,52 @@ app.post("/upload-excel", async (req, res) => {
         ) {
 
             return res.status(400).json({
-
                 message:
                     "No Excel data received"
-
             });
 
         }
-
-
-        // Excel file name
 
         const fileName =
             req.body.fileName ||
             "Unknown Excel File";
 
-
-        // Create unique batch ID
-
         const batchId =
             crypto.randomUUID();
-
-
-        // Upload time
 
         const uploadTime =
             new Date();
 
-
-        // Get Excel column names
-
         const columns =
             Object.keys(data[0]);
 
-
-        // Add batch information
-        // to every record
-
         const records =
-            data.map(row => ({
+            data.map(function (row) {
 
-                ...row,
+                return {
 
-                batchId:
-                    batchId,
+                    ...row,
 
-                fileName:
-                    fileName,
+                    batchId:
+                        batchId,
 
-                uploadTime:
-                    uploadTime,
+                    fileName:
+                        fileName,
 
-                excelColumns:
-                    columns
+                    uploadTime:
+                        uploadTime,
 
-            }));
+                    excelColumns:
+                        columns
 
+                };
 
-        // Insert records into MongoDB
+            });
 
         const result =
             await collection.insertMany(
                 records
             );
-
-
-        // Console information
 
         console.log(
             "Excel uploaded successfully"
@@ -160,22 +129,9 @@ app.post("/upload-excel", async (req, res) => {
         );
 
         console.log(
-            "Upload Time:",
-            uploadTime
-        );
-
-        console.log(
-            "Columns:",
-            columns
-        );
-
-        console.log(
-            "Records inserted:",
+            "Records:",
             result.insertedCount
         );
-
-
-        // Send response
 
         res.json({
 
@@ -200,14 +156,12 @@ app.post("/upload-excel", async (req, res) => {
         });
 
     }
-
     catch (error) {
 
         console.error(
             "Upload error:",
             error
         );
-
 
         res.status(500).json({
 
@@ -225,7 +179,7 @@ app.post("/upload-excel", async (req, res) => {
 
 
 // ========================================
-// GET ALL UPLOADED EXCEL FILES
+// GET EXCEL LIST
 // ========================================
 
 app.get("/batches", async (req, res) => {
@@ -239,13 +193,8 @@ app.get("/batches", async (req, res) => {
                     $match: {
 
                         batchId: {
-
-                            $exists:
-                                true,
-
-                            $ne:
-                                null
-
+                            $exists: true,
+                            $ne: null
                         }
 
                     }
@@ -255,8 +204,7 @@ app.get("/batches", async (req, res) => {
                 {
                     $sort: {
 
-                        uploadTime:
-                            -1
+                        uploadTime: -1
 
                     }
 
@@ -271,4 +219,281 @@ app.get("/batches", async (req, res) => {
                         fileName: {
 
                             $first:
+                                "$fileName"
+
+                        },
+
+                        uploadTime: {
+
+                            $first:
+                                "$uploadTime"
+
+                        },
+
+                        recordCount: {
+
+                            $sum:
+                                1
+
+                        }
+
+                    }
+
+                },
+
+                {
+                    $sort: {
+
+                        uploadTime: -1
+
+                    }
+
+                }
+
+            ]).toArray();
+
+
+        res.json(
+            batches
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Batches error:",
+            error
+        );
+
+        res.status(500).json({
+
+            message:
+                "Unable to load Excel list",
+
+            error:
+                error.message
+
+        });
+
+    }
+
+});
+
+
+// ========================================
+// GET SELECTED EXCEL DATA
+// ========================================
+
+app.get("/data", async (req, res) => {
+
+    try {
+
+        const batchId =
+            req.query.batch;
+
+        if (!batchId) {
+
+            return res.status(400).json({
+
+                message:
+                    "Batch ID is required"
+
+            });
+
+        }
+
+        const data =
+            await collection
+                .find({
+                    batchId:
+                        batchId
+                })
+                .sort({
+                    _id:
+                        1
+                })
+                .toArray();
+
+
+        if (
+            data.length === 0
+        ) {
+
+            return res.json({
+
+                batchId:
+                    batchId,
+
+                fileName:
+                    null,
+
+                uploadTime:
+                    null,
+
+                columns:
+                    [],
+
+                data:
+                    []
+
+            });
+
+        }
+
+
+        const columns =
+            data[0].excelColumns || [];
+
+
+        const fileName =
+            data[0].fileName || "";
+
+
+        const uploadTime =
+            data[0].uploadTime || null;
+
+
+        res.json({
+
+            batchId:
+                batchId,
+
+            fileName:
+                fileName,
+
+            uploadTime:
+                uploadTime,
+
+            columns:
+                columns,
+
+            data:
+                data
+
+        });
+
+    }
+    catch (error) {
+
+        console.error(
+            "Data error:",
+            error
+        );
+
+        res.status(500).json({
+
+            message:
+                "Error fetching data",
+
+            error:
+                error.message
+
+        });
+
+    }
+
+});
+
+
+// ========================================
+// UPDATE RECORD
+// ========================================
+
+app.put("/data/:id", async (req, res) => {
+
+    try {
+
+        const id =
+            req.params.id;
+
+        const updateData =
+            req.body;
+
+        delete updateData._id;
+        delete updateData.batchId;
+        delete updateData.excelColumns;
+        delete updateData.fileName;
+        delete updateData.uploadTime;
+
+
+        const result =
+            await collection.updateOne(
+
+                {
+                    _id:
+                        new mongoose.Types.ObjectId(
+                            id
+                        )
+                },
+
+                {
+                    $set:
+                        updateData
+                }
+
+            );
+
+
+        if (
+            result.matchedCount === 0
+        ) {
+
+            return res.status(404).json({
+
+                message:
+                    "Record not found"
+
+            });
+
+        }
+
+
+        res.json({
+
+            message:
+                "Record updated successfully"
+
+        });
+
+    }
+    catch (error) {
+
+        console.error(
+            "Update error:",
+            error
+        );
+
+        res.status(500).json({
+
+            message:
+                "Update failed",
+
+            error:
+                error.message
+
+        });
+
+    }
+
+});
+
+
+// ========================================
+// START SERVER
+// ========================================
+
+const PORT =
+    process.env.PORT || 3000;
+
+app.listen(
+    PORT,
+    () => {
+
+        console.log(
+            "Server running on port " +
+            PORT
+        );
+
+    }
+);
 ```
