@@ -55,7 +55,15 @@
 <body>
 
 <h2>MongoDB Dynamic Report</h2>
+<label><b>Select Excel:</b></label>
 
+<select id="batchSelect" onchange="loadSelectedBatch()">
+    <option value="">Loading...</option>
+</select>
+
+<button onclick="loadBatches()">Refresh Excel List</button>
+
+<div id="fileInfo"></div>
 
 <button
     onclick="location.href='index1.html'">
