@@ -57,6 +57,21 @@ app.post("/upload-excel", async (req, res) => {
 
         const data =
             req.body.data;
+        const fileName = req.body.fileName;
+
+const batchId = crypto.randomUUID();
+
+const uploadTime = new Date();
+
+const columns = Object.keys(data[0]);
+
+const records = data.map(row => ({
+    ...row,
+    batchId,
+    fileName,
+    uploadTime,
+    excelColumns: columns
+}));
 
 
         if (
@@ -229,7 +244,24 @@ app.get("/data", async (req, res) => {
     }
 });
 
+app.get("/batches", async (req, res) => {
 
+    const batches = await collection.aggregate([
+        {
+            $sort: { uploadTime: -1 }
+        },
+        {
+            $group: {
+                _id: "$batchId",
+                fileName: { $first: "$fileName" },
+                uploadTime: { $first: "$uploadTime" }
+            }
+        }
+    ]).toArray();
+
+    res.json(batches);
+
+});
        
 
 
