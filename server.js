@@ -54,10 +54,9 @@ app.get("/", (req, res) => {
 app.post("/upload-excel", async (req, res) => {
 
     try {
+const data = req.body.data;
 
-        const data =
-            req.body.data;
-        const fileName = req.body.fileName;
+const fileName = req.body.fileName || "Unknown Excel File";
 
 const batchId = crypto.randomUUID();
 
@@ -67,12 +66,12 @@ const columns = Object.keys(data[0]);
 
 const records = data.map(row => ({
     ...row,
-    batchId,
-    fileName,
-    uploadTime,
+    batchId: batchId,
+    fileName: fileName,
+    uploadTime: uploadTime,
     excelColumns: columns
 }));
-
+        
 
         if (
             !Array.isArray(data) ||
@@ -183,46 +182,54 @@ const records = data.map(row => ({
 // ========================================
 // GET LATEST BATCH
 // ========================================
+
+
 app.get("/data", async (req, res) => {
+
     try {
 
-        const data = await collection
-            .find({})
-            .sort({ _id: 1 })
-            .toArray();
+        const batchId = req.query.batch;
 
-        if (data.length === 0) {
-            return res.json({
-                batchId: null,
-                columns: [],
-                data: []
+        if (!batchId) {
+            return res.status(400).json({
+                message: "Batch ID is required"
             });
         }
 
-        // Automatically collect all column names
-        // from the MongoDB records
-        const columnSet = new Set();
+        const data = await collection
+            .find({
+                batchId: batchId
+            })
+            .sort({
+                _id: 1
+            })
+            .toArray();
 
-        data.forEach(record => {
+        if (data.length === 0) {
 
-            Object.keys(record).forEach(key => {
-
-                if (
-                    key !== "_id" &&
-                    key !== "batchId" &&
-                    key !== "excelColumns"
-                ) {
-                    columnSet.add(key);
-                }
-
+            return res.json({
+                batchId: batchId,
+                fileName: null,
+                uploadTime: null,
+                columns: [],
+                data: []
             });
 
-        });
+        }
 
-        const columns = Array.from(columnSet);
+        const columns =
+            data[0].excelColumns || [];
+
+        const fileName =
+            data[0].fileName || "";
+
+        const uploadTime =
+            data[0].uploadTime || null;
 
         res.json({
-            batchId: null,
+            batchId: batchId,
+            fileName: fileName,
+            uploadTime: uploadTime,
             columns: columns,
             data: data
         });
@@ -235,37 +242,71 @@ app.get("/data", async (req, res) => {
         );
 
         res.status(500).json({
-            message:
-                "Error fetching data",
-            error:
-                error.message
+            message: "Error fetching data",
+            error: error.message
         });
 
     }
+
 });
+
+  
 
 app.get("/batches", async (req, res) => {
 
-    const batches = await collection.aggregate([
-        {
-            $sort: { uploadTime: -1 }
-        },
-        {
-            $group: {
-                _id: "$batchId",
-                fileName: { $first: "$fileName" },
-                uploadTime: { $first: "$uploadTime" }
-            }
-        }
-    ]).toArray();
+    try {
 
-    res.json(batches);
+        const batches = await collection.aggregate([
+            {
+                $match: {
+                    batchId: {
+                        $exists: true,
+                        $ne: null
+                    }
+                }
+            },
+            {
+                $sort: {
+                    uploadTime: -1
+                }
+            },
+            {
+                $group: {
+                    _id: "$batchId",
+                    fileName: {
+                        $first: "$fileName"
+                    },
+                    uploadTime: {
+                        $first: "$uploadTime"
+                    },
+                    recordCount: {
+                        $sum: 1
+                    }
+                }
+            },
+            {
+                $sort: {
+                    uploadTime: -1
+                }
+            }
+        ]).toArray();
+
+        res.json(batches);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Unable to load Excel list",
+            error: error.message
+        });
+
+    }
 
 });
-       
-
-
-      
+   
+   
 
 
 
