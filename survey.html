@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<!-- VERY IMPORTANT FOR MOBILE -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>4G Site Survey</title>
+
+<style>
+
+/* =========================
+   BASIC PAGE
+   ========================= */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f2f4f7;
+    color: #222;
+}
+
+.container {
+    max-width: 1400px;
+    margin: auto;
+    padding: 20px;
+}
+
+
+/* =========================
+   HEADER
+   ========================= */
+
+.header {
+    background: #17365d;
+    color: white;
+    padding: 18px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.header p {
+    margin: 6px 0 0;
+}
+
+
+/* =========================
+   SECTIONS
+   ========================= */
+
+.section {
+    background: white;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+}
+
+.section-title {
+    background: #e8eef6;
+    padding: 12px 16px;
+    font-size: 18px;
+    font-weight: bold;
+    border-bottom: 1px solid #ccd5df;
+}
+
+.section-body {
+    padding: 18px;
+}
+
+
+/* =========================
+   FORM GRID
+   ========================= */
+
+.form-grid {
+    display: grid;
+
+    /* DESKTOP = 4 COLUMNS */
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full {
+    grid-column: 1 / -1;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 5px;
+    font-size: 15px;
+}
+
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+
+/* =========================
+   TARGET TABLE
+   ========================= */
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border: 1px solid #ccc;
+    padding: 9px;
+    text-align: left;
+}
+
+th {
+    background: #eef2f7;
+}
+
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+.buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.save {
+    background: #198754;
+    color: white;
+}
+
+.reset {
+    background: #6c757d;
+    color: white;
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 900px) {
+
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+/* =========================
+   PHONE
+   ========================= */
+
+@media (max-width: 600px) {
+
+    .container {
+        padding: 10px;
+    }
+
+    .header {
+        padding: 15px;
+    }
+
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .section-body {
+        padding: 12px;
+    }
+
+    /* ONE COLUMN ON PHONE */
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .form-group.full {
+        grid-column: auto;
+    }
+
+    /* BIGGER TOUCH CONTROLS */
+
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    /* BUTTONS BECOME FULL WIDTH */
+
+    .buttons {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+        min-height: 48px;
+    }
+
+}
+
+
+/* =========================
+   VERY SMALL PHONES
+   ========================= */
+
+@media (max-width: 380px) {
+
+    .container {
+        padding: 6px;
+    }
+
+    .section-body {
+        padding: 10px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+<!-- =========================
+     HEADER
+     ========================= -->
+
+<div class="header">
+
+    <h1>4G Site Survey Form</h1>
+
+    <p>
+        Installation & Commissioning Survey
+    </p>
+
+</div>
+
+
+<form>
+
+
+<!-- =========================
+     SITE DETAILS
+     ========================= -->
+
+<div class="section">
+
+<div class="section-title">
+    1. Site / Location Details
+</div>
+
+<div class="section-body">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>ZONE</label>
+<select>
+<option>Select Zone</option>
+<option>Mumbai</option>
+<option>Thane</option>
+<option>Navi Mumbai</option>
+</select>
+</div>
+
+
+<div class="form-group">
+<label>Criteria</label>
+<select>
+<option>Select</option>
+<option>New Site</option>
+<option>Existing Site</option>
+</select>
+</div>
+
+
+<div class="form-group">
+<label>Final LCID</label>
+<input type="text">
+</div>
+
+
+<div class="form-group">
+<label>IP ID</label>
+<input type="text">
+</div>
+
+
+<div class="form-group">
+<label>IP-Site Name</label>
+<input type="text">
+</div>
+
+
+<div class="form-group">
+<label>Latitude</label>
+<input type="number" step="any">
+</div>
+
+
+<div class="form-group">
+<label>Longitude</label>
+<input type="number" step="any">
+</div>
+
+
+<div class="form-group">
+<label>Exchange Code</label>
+<input type="text">
+</div>
+
+
+<div class="form-group full">
+<label>A Address</label>
+<textarea></textarea>
+</div>
+
+
+<div class="form-group full">
+<label>B Address</label>
+<textarea></textarea>
+</div>
+
+</div>
+
+</div>
+</div>
+
+
+<!-- =========================
+     CONNECTIVITY
+     ========================= -->
+
+<div class="section">
+
+<div class="section-title">
+    2. Target Site Connectivity
+</div>
+
+<div class="section-body">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>MPLS Distance (Km)</label>
+<input type="number" step="any">
+</div>
+
+
+<div class="form-group">
+<label>POP Location</label>
+<input type="text">
+</div>
+
+
+<div class="form-group">
+<label>POP Distance</label>
+<input type="number" step="any">
+</div>
+
+
+<div class="form-group">
+<label>Nearest MPLS</label>
+<input type="text">
+</div>
+
+</div>
+
+
+<br>
+
+
+<div class="table-wrapper">
+
+<table>
+
+<thead>
+<tr>
+<th>Target ID</th>
+<th>Distance (Km)</th>
+<th>Remarks</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td><input type="text"></td>
+<td><input type="number"></td>
+<td><input type="text"></td>
+</tr>
+
+<tr>
+<td><input type="text"></td>
+<td><input type="number"></td>
+<td><input type="text"></td>
+</tr>
+
+<tr>
+<td><input type="text"></td>
+<td><input type="number"></td>
+<td><input type="text"></td>
+</tr>
+
+<tr>
+<td><input type="text"></td>
+<td><input type="number"></td>
+<td><input type="text"></td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+</div>
+
+
+<!-- =========================
+     SURVEY DETAILS
+     ========================= -->
+
+<div class="section">
+
+<div class="section-title">
+    3. Survey Details
+</div>
+
+<div class="section-body">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>Zone Executive</label>
+<input type="text">
+</div>
+
+
+<div class="form-group">
+<label>WS Executive</label>
+<input type="text">
+</div>
+
+
+<div class="form-group">
+<label>Date of Survey</label>
+<input type="date">
+</div>
+
+
+<div class="form-group">
+<label>Survey By</label>
+<input type="text">
+</div>
+
+
+<div class="form-group">
+<label>Earthing</label>
+<select>
+<option>Select</option>
+<option>Available</option>
+<option>Not Available</option>
+</select>
+</div>
+
+
+<div class="form-group">
+<label>Power Supply</label>
+<select>
+<option>Select</option>
+<option>Available</option>
+<option>Not Available</option>
+</select>
+</div>
+
+</div>
+
+</div>
+</div>
+
+
+<!-- =========================
+     MEDIA FEASIBILITY
+     ========================= -->
+
+<div class="section">
+
+<div class="section-title">
+    4. Media Feasibility
+</div>
+
+<div class="section-body">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>Media Type</label>
+<select>
+<option>Select</option>
+<option>Dual Core</option>
+<option>OLT</option>
+<option>MPLS</option>
+<option>Fiber</option>
+</select>
+</div>
+
+
+<div class="form-group">
+<label>Fiber Available</label>
+<select>
+<option>Select</option>
+<option>Yes</option>
+<option>No</option>
+</select>
+</div>
+
+
+<div class="form-group">
+<label>OLT Available</label>
+<select>
+<option>Select</option>
+<option>Yes</option>
+<option>No</option>
+</select>
+</div>
+
+
+<div class="form-group">
+<label>Store Availability</label>
+<select>
+<option>Select</option>
+<option>Yes</option>
+<option>No</option>
+</select>
+</div>
+
+
+<div class="form-group full">
+<label>Media Remarks</label>
+<textarea></textarea>
+</div>
+
+</div>
+
+</div>
+</div>
+
+
+<!-- =========================
+     TAPPING POINT
+     ========================= -->
+
+<div class="section">
+
+<div class="section-title">
+    5. Final Tapping Point Details
+</div>
+
+<div class="section-body">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>Tapping Point</label>
+<input type="text">
+</div>
+
+
+<div class="form-group">
+<label>Tapping Latitude</label>
+<input type="number" step="any">
+</div>
+
+
+<div class="form-group">
+<label>Tapping Longitude</label>
+<input type="number" step="any">
+</div>
+
+
+<div class="form-group">
+<label>Radial Distance (m)</label>
+<input type="number" step="any">
+</div>
+
+
+<div class="form-group">
+<label>Fiber Length (m)</label>
+<input type="number">
+</div>
+
+
+<div class="form-group">
+<label>Labour Required</label>
+<select>
+<option>Select</option>
+<option>Yes</option>
+<option>No</option>
+</select>
+</div>
+
+
+<div class="form-group full">
+<label>Tapping Point Remarks</label>
+<textarea></textarea>
+</div>
+
+</div>
+
+</div>
+</div>
+
+
+<!-- =========================
+     ADDITIONAL DETAILS
+     ========================= -->
+
+<div class="section">
+
+<div class="section-title">
+    6. Additional Details
+</div>
+
+<div class="section-body">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>Readiness Status</label>
+<select>
+<option>Select</option>
+<option>Ready</option>
+<option>Partially Ready</option>
+<option>Not Ready</option>
+</select>
+</div>
+
+
+<div class="form-group">
+<label>Existing Nearby Site</label>
+<select>
+<option>Select</option>
+<option>Yes</option>
+<option>No</option>
+</select>
+</div>
+
+
+<div class="form-group">
+<label>Techno-Commercial Viability</label>
+<select>
+<option>Select</option>
+<option>Viable</option>
+<option>Not Viable</option>
+</select>
+</div>
+
+
+<div class="form-group">
+<label>Business Area</label>
+<input type="text">
+</div>
+
+
+<div class="form-group full">
+<label>Final Remarks</label>
+<textarea></textarea>
+</div>
+
+</div>
+
+</div>
+</div>
+
+
+<!-- =========================
+     BUTTONS
+     ========================= -->
+
+<div class="buttons">
+
+<button type="submit" class="save">
+    Save Survey
+</button>
+
+<button type="reset" class="reset">
+    Reset
+</button>
+
+</div>
+
+
+</form>
+
+</div>
+
+</body>
+</html>
